@@ -1,0 +1,12 @@
+{
+  "name": "top-cams-embed",
+  "version": "1.0.0",
+  "description": "Auto‑update top Chaturbate rooms",
+  "main": "generate.js",
+  "scripts": {
+    "build": "node generate.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}
