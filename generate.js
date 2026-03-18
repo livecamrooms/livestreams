@@ -3,11 +3,12 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 
 // --- CONFIGURATION ---
-const AFFILIATE_ID = 'E8bhk';                     // your new affiliate ID
+const AFFILIATE_ID = 'E8bhk';
 // Choose a tour code that works for embedding (test from your list)
-const TOUR_CODE = 'grq0';                          // try 'dU9X', 'hr8m', etc.
-const API_URL = `https://chaturbate.com/api/public/affiliates/onlinerooms/?wm=${AFFILIATE_ID}&format=json`;
-const TOP_N = 5;                                    // number of top rooms to embed
+const TOUR_CODE = 'grq0';  // try 'dU9X', 'hr8m', '41Ea', etc.
+// Use the JSON endpoint that doesn't require client_ip
+const API_URL = `https://chaturbate.com/affiliates/api/onlinerooms/?format=json&wm=${AFFILIATE_ID}`;
+const TOP_N = 5;
 
 async function fetchRooms() {
   console.log('Fetching rooms from API...');
@@ -26,7 +27,6 @@ async function fetchRooms() {
 function buildHtml(topRooms) {
   let iframes = '';
   topRooms.forEach(room => {
-    // Use the affiliate embed URL format
     const embedUrl = `https://chaturbate.com/affiliates/in/?tour=${TOUR_CODE}&campaign=${AFFILIATE_ID}&track=default&room=${room.username}&bgcolor=white`;
     iframes += `
     <div class="room">
@@ -64,7 +64,6 @@ function buildHtml(topRooms) {
 
 async function main() {
   const rooms = await fetchRooms();
-  // Sort by viewers descending
   const sorted = rooms.sort((a, b) => b.viewers - a.viewers);
   const top = sorted.slice(0, TOP_N);
   console.log(`Top rooms: ${top.map(r => r.username).join(', ')}`);
@@ -73,7 +72,6 @@ async function main() {
   console.log('index.html generated successfully.');
 }
 
-// Run and exit with code 1 on error
 main().catch(err => {
   console.error('FATAL ERROR:', err.message);
   process.exit(1);
