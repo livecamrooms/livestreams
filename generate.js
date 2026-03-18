@@ -30,7 +30,7 @@ function buildHtml(topRooms) {
     const embedUrl = `https://chaturbate.com/affiliates/in/?tour=${TOUR_CODE}&campaign=${AFFILIATE_ID}&track=default&room=${room.username}&bgcolor=white`;
     iframes += `
     <div class="room">
-      <h3>${room.username} (👁️ ${room.viewers} viewers)</h3>
+      <h3>${room.username} (👁️ ${room.viewers || room.num_users || 'N/A'} viewers)</h3>
       <iframe src="${embedUrl}" width="100%" height="400" frameborder="0" scrolling="no" allowfullscreen></iframe>
     </div>
     `;
