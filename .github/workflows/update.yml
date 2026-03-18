@@ -27,7 +27,11 @@ jobs:
 
       - name: Generate index.html
         run: npm run build
-
+- name: Debug API output
+  run: |
+    echo "First room data sample:"
+    head -n 20 index.html || echo "index.html not found"
+    # You could also save the raw API response, but that's more complex
       # Ensure .gitignore exists and excludes node_modules
       - name: Create/update .gitignore
         run: |
