@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 // --- CONFIGURATION ---
 const AFFILIATE_ID = 'E8bhk';
 // Choose a tour code that works for embedding (test from your list)
-const TOUR_CODE = 'grq0';  // try 'dU9X', 'hr8m', '41Ea', etc.
+const TOUR_CODE = 'gLDS';  // try 'dU9X', 'hr8m', '41Ea', etc.
 // Use the JSON endpoint that doesn't require client_ip
 const API_URL = `https://chaturbate.com/affiliates/api/onlinerooms/?format=json&wm=${AFFILIATE_ID}`;
 const TOP_N = 5;
