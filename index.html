@@ -1,574 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LiveStream Directory — Find Live Rooms Now</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0a0c;
-    --surface: #111114;
-    --card: #16161a;
-    --border: #222228;
-    --accent: #ff3c5f;
-    --accent2: #ff7a00;
-    --text: #f0f0f0;
-    --muted: #666676;
-    --live: #00e676;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .blob {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.08;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -100px; }
-  .blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; left: -100px; }
-
-  header {
-    position: relative;
-    z-index: 10;
-    padding: 28px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(12px);
-    background: rgba(10,10,12,0.7);
-    position: sticky;
-    top: 0;
-  }
-
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    letter-spacing: 0.06em;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .live-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--live);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .live-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--live);
-    box-shadow: 0 0 8px var(--live);
-    animation: pulse 1.4s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-
-  .hero {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 64px 40px 40px;
-  }
-
-  .hero h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(3rem, 8vw, 7rem);
-    line-height: 0.95;
-    letter-spacing: 0.03em;
-    background: linear-gradient(160deg, #fff 40%, #888);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero h1 span {
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero p {
-    margin: 18px auto 0;
-    max-width: 480px;
-    color: var(--muted);
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-
-  .controls {
-    position: relative;
-    z-index: 1;
-    padding: 0 40px 32px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: center;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .search-wrap {
-    position: relative;
-    flex: 1;
-    min-width: 220px;
-    max-width: 360px;
-  }
-
-  .search-wrap input {
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 16px 10px 40px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .search-wrap input:focus { border-color: var(--accent); }
-  .search-wrap::before {
-    content: '⌕';
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 1.1rem;
-  }
-
-  .sort-select {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 16px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  .sort-select:focus { border-color: var(--accent); }
-
-  .tag-filters {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .tag-btn {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 7px 14px;
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.18s;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .tag-btn:hover { border-color: var(--accent); color: var(--text); }
-  .tag-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
-  .stats-bar {
-    position: relative;
-    z-index: 1;
-    padding: 0 40px 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-    font-size: 0.82rem;
-    color: var(--muted);
-  }
-
-  .stats-bar strong { color: var(--text); }
-
-  .grid {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 18px;
-    padding: 0 40px 80px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
-    animation: fadeIn 0.4s ease both;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(255,60,95,0.5);
-    box-shadow: 0 16px 48px rgba(255,60,95,0.12);
-  }
-
-  .thumb-wrap {
-    position: relative;
-    aspect-ratio: 16/9;
-    overflow: hidden;
-    background: #1a1a20;
-  }
-
-  .thumb-wrap img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.4s ease;
-  }
-
-  .card:hover .thumb-wrap img { transform: scale(1.06); }
-
-  .viewers-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(6px);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: #fff;
-  }
-
-  .viewers-badge::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--live);
-    box-shadow: 0 0 6px var(--live);
-  }
-
-  .card-body {
-    padding: 14px 16px 16px;
-  }
-
-  .room-name {
-    font-weight: 500;
-    font-size: 0.95rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 6px;
-  }
-
-  .room-tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .room-tag {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .loading {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 100px 40px;
-    color: var(--muted);
-  }
-
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 20px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .error-msg {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 80px 40px;
-    color: var(--muted);
-  }
-
-  .error-msg button {
-    margin-top: 20px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 24px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-
-  .no-results {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 80px 40px;
-    color: var(--muted);
-    grid-column: 1/-1;
-  }
-
-  footer {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 30px;
-    border-top: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 0.8rem;
-  }
-
-  @media (max-width: 600px) {
-    header { padding: 18px 20px; }
-    .hero { padding: 40px 20px 28px; }
-    .controls { padding: 0 20px 24px; }
-    .grid { padding: 0 20px 60px; gap: 14px; }
-    .stats-bar { padding: 0 20px 16px; }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON TRINITY · Live Streams</title>
+  <style>
+    /*! NEON TRINITY - PURPLE · GOLD · GREEN */
+    :root {
+      --bg: #05020a;
+      --bg2: #0a0515;
+      --bg3: #100a20;
+      --card: #070310;
+      --neon-purple: #c000ff;
+      --neon-gold: #ffd700;
+      --neon-green: #00ff88;
+      --glow-purple: #c000ffaa;
+      --glow-gold: #ffd700aa;
+      --glow-green: #00ff88aa;
+      --text: #f2eaff;
+      --muted: #8a7aaf;
+      --border: #2a1a4a;
+      --live: #f43f5e;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+      background-image: radial-gradient(ellipse at 10% 20%, #c000ff08 0%, transparent 60%),
+                        radial-gradient(ellipse at 90% 80%, #00ff8808 0%, transparent 60%);
+    }
+    @keyframes trioPulse {
+      0% { text-shadow: 0 0 2px var(--neon-purple); }
+      33% { text-shadow: 0 0 8px var(--neon-gold); }
+      66% { text-shadow: 0 0 4px var(--neon-green); }
+      100% { text-shadow: 0 0 2px var(--neon-purple); }
+    }
+    @keyframes borderRainbow {
+      0% { border-color: var(--neon-purple); }
+      50% { border-color: var(--neon-gold); }
+      100% { border-color: var(--neon-green); }
+    }
+    @keyframes ld {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.4); }
+    }
+    @keyframes sh {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .hdr {
+      background: rgba(5, 2, 10, .92);
+      backdrop-filter: blur(16px);
+      border-bottom: 2px solid var(--neon-purple);
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 0 12px var(--glow-purple);
+      animation: borderRainbow 4s infinite;
+    }
+    .hdr-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-gold), var(--neon-green));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 2px;
+      animation: trioPulse 3s infinite;
+    }
+    .hdr-live {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(244, 63, 94, .12);
+      border: 1px solid var(--live);
+      color: var(--live);
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      box-shadow: 0 0 4px var(--glow-purple);
+    }
+    .hdr-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--live);
+      animation: ld 1.4s infinite;
+      box-shadow: 0 0 6px var(--live);
+    }
+    .hdr-sp { flex: 1; }
+    .hdr-count {
+      color: var(--neon-green);
+      font-size: .8rem;
+      text-shadow: 0 0 4px var(--glow-green);
+    }
+    .sec-hdr {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .sec-line {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, var(--neon-purple), transparent);
+      box-shadow: 0 0 6px var(--glow-purple);
+    }
+    .sec-title {
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .main {
+      max-width: 1420px;
+      margin: 0 auto;
+      padding: 22px 16px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .stat-c {
+      flex: 1;
+      min-width: 120px;
+      background: var(--card);
+      border: 1px solid var(--neon-gold);
+      border-radius: 12px;
+      padding: 16px 18px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all .2s;
+      box-shadow: 0 0 6px rgba(255, 215, 0, .2);
+    }
+    .stat-c:hover {
+      box-shadow: 0 0 20px var(--glow-gold);
+      border-color: var(--neon-green);
+      transform: scale(1.02);
+    }
+    .stat-n {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .stat-l {
+      font-size: .7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 3px;
+    }
+    .fbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      box-shadow: inset 0 0 6px var(--glow-purple);
+    }
+    .fb {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: .78rem;
+      cursor: pointer;
+      transition: all .18s;
+      font-weight: 600;
+    }
+    .fb:hover, .fb.on {
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-gold));
+      border-color: transparent;
+      color: #000;
+      box-shadow: 0 0 12px var(--glow-purple);
+    }
+    .f-srch {
+      flex: 1;
+      min-width: 160px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: .8rem;
+      outline: none;
+    }
+    .f-srch:focus {
+      border-color: var(--neon-green);
+      box-shadow: 0 0 0 2px var(--glow-green);
+    }
+    #g {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+      gap: 16px;
+    }
+    .c {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all .2s;
+      position: relative;
+      will-change: transform;
+    }
+    .c::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--neon-purple)00, var(--neon-green)00);
+      transition: all .3s;
+      pointer-events: none;
+    }
+    .c:hover {
+      border-color: var(--neon-gold);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px var(--glow-gold);
+    }
+    .c:hover::before {
+      background: linear-gradient(135deg, var(--neon-purple)08, var(--neon-green)08);
+    }
+    .c a {
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      z-index: 1;
+    }
+    .c-th {
+      position: relative;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: var(--bg3);
+    }
+    .c-th img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .3s;
+      will-change: transform;
+    }
+    .c:hover .c-th img { transform: scale(1.06); }
+    .b-lv {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      background: var(--live);
+      color: #fff;
+      font-size: .63rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      z-index: 2;
+      box-shadow: 0 0 6px var(--live);
+    }
+    .b-top {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      background: linear-gradient(90deg, var(--neon-gold), var(--neon-green));
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      z-index: 2;
+      box-shadow: 0 0 6px var(--glow-gold);
+    }
+    .b-vc {
+      position: absolute;
+      bottom: 7px;
+      right: 7px;
+      background: rgba(0, 0, 0, .8);
+      color: var(--neon-green);
+      font-size: .72rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      z-index: 2;
+      font-family: monospace;
+      box-shadow: 0 0 4px var(--glow-green);
+    }
+    .c-bd {
+      padding: 10px 13px 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .c-nm {
+      font-size: .88rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .c-tg {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .ctg {
+      background: var(--bg3);
+      color: var(--muted);
+      font-size: .65rem;
+      padding: 1px 7px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .c-btn {
+      display: block;
+      text-align: center;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-gold));
+      color: #000;
+      font-size: .78rem;
+      font-weight: 800;
+      padding: 9px;
+      margin: 8px 12px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all .2s;
+      z-index: 1;
+      box-shadow: 0 0 8px var(--glow-purple);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .c-btn:hover {
+      opacity: .9;
+      box-shadow: 0 0 20px var(--glow-purple);
+      transform: scale(1.02);
+    }
+    .sk {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .sk-i {
+      aspect-ratio: 16/9;
+      background: linear-gradient(90deg, var(--card) 25%, var(--bg3) 50%, var(--card) 75%);
+      background-size: 200% 100%;
+      animation: sh 1.5s infinite;
+    }
+    .sk-l {
+      height: 11px;
+      margin: 10px 12px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--card) 25%, var(--bg3) 50%, var(--card) 75%);
+      background-size: 200% 100%;
+      animation: sh 1.5s infinite;
+    }
+    .sk-l.s { width: 50%; }
+    .no {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+    }
+    .no h3 {
+      font-size: 1.1rem;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    footer {
+      text-align: center;
+      padding: 22px;
+      color: var(--muted);
+      font-size: .75rem;
+      border-top: 2px solid;
+      border-image: linear-gradient(90deg, var(--neon-purple), var(--neon-gold), var(--neon-green)) 1;
+      margin-top: 36px;
+    }
+    @media (max-width: 600px) {
+      #g { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stats-row { gap: 8px; }
+    }
+  </style>
 </head>
 <body>
-
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-
-<header>
-  <div class="logo">StreamNow</div>
-  <div class="live-badge">
-    <span class="live-dot"></span>
-    Rooms Live Now
+  <div class="hdr">
+    <div class="hdr-logo">⚡ NEON TRINITY</div>
+    <div class="hdr-live"><span class="hdr-dot"></span>LIVE STREAMS</div>
+    <div class="hdr-sp"></div>
+    <span class="hdr-count" id="hc">Loading...</span>
   </div>
-</header>
-
-<section class="hero">
-  <h1>Find Who's<br><span>Live Right Now</span></h1>
-  <p>Browse thousands of live streams. Updated in real time.</p>
-</section>
-
-<div class="controls">
-  <div class="search-wrap">
-    <input type="text" id="searchInput" placeholder="Search rooms..." />
+  <div class="main">
+    <div class="stats-row">
+      <div class="stat-c"><div class="stat-n" id="s1">-</div><div class="stat-l">Live Rooms</div></div>
+      <div class="stat-c"><div class="stat-n" id="s2">-</div><div class="stat-l">Watching</div></div>
+      <div class="stat-c"><div class="stat-n" id="s3">90s</div><div class="stat-l">Refresh</div></div>
+      <div class="stat-c"><div class="stat-n" id="s4">-</div><div class="stat-l">Top Viewers</div></div>
+    </div>
+    <div class="sec-hdr"><div class="sec-line"></div><div class="sec-title">✨ Live Rooms</div><div class="sec-line"></div></div>
+    <div class="fbar">
+      <button class="fb on" data-filter="all">🌟 All</button>
+      <button class="fb" data-filter="female">👧 Girls</button>
+      <button class="fb" data-filter="male">👦 Boys</button>
+      <button class="fb" data-filter="couple">💑 Couples</button>
+      <button class="fb" data-filter="trans">⚡ Trans</button>
+      <input class="f-srch" id="fi" placeholder="Search performers..." type="text">
+    </div>
+    <div id="g"></div>
   </div>
-  <select class="sort-select" id="sortSelect">
-    <option value="viewers_desc">Most Viewers</option>
-    <option value="viewers_asc">Fewest Viewers</option>
-  </select>
-  <div class="tag-filters" id="tagFilters">
-    <button class="tag-btn active" data-tag="">All</button>
-    <button class="tag-btn" data-tag="female">Female</button>
-    <button class="tag-btn" data-tag="male">Male</button>
-    <button class="tag-btn" data-tag="couple">Couple</button>
-    <button class="tag-btn" data-tag="trans">Trans</button>
-  </div>
-</div>
+  <footer>NEON TRINITY • 18+ Adults Only • © <span id="fy"></span></footer>
 
-<div class="stats-bar" id="statsBar"></div>
-
-<div id="app"></div>
-
-<footer>
-  All streams are hosted externally. Content is 18+ only.<br>
-  <span style="font-size:0.7rem;opacity:0.6;">Using temporary CORS proxy • For best speed run with python -m http.server</span>
-</footer>
-
-<script>
-  // CORS proxy so it works even when double-clicking the file
-  const PROXY = 'https://corsproxy.io/?';
-  const API_URL = PROXY + encodeURIComponent('https://chaturbate.com/api/public/affiliates/onlinerooms/?wm=T2CSW&format=json&limit=90');
-  const ROOM_BASE = 'https://chaturbate.com/';
-
-  let allRooms = [];
-  let activeTag = '';
-  let sortMode = 'viewers_desc';
-  let searchQuery = '';
-
-  async function fetchRooms() {
-    const app = document.getElementById('app');
-    app.innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading live rooms…</p></div>`;
-
-    try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      allRooms = data.results || [];
-      console.log(`✅ Loaded ${allRooms.length} live rooms`);
-      render();
-    } catch (e) {
-      console.error(e);
-      app.innerHTML = `
-        <div class="error-msg">
-          <p>Still couldn't load rooms.</p>
-          <p style="margin-top:12px;font-size:0.9rem;">Try these steps:</p>
-          <ol style="text-align:left;max-width:420px;margin:20px auto;font-size:0.9rem;">
-            <li>Run locally with: <code style="background:#222;padding:2px 6px;border-radius:4px;">python -m http.server</code></li>
-            <li>Or deploy to Netlify / Vercel (free)</li>
-          </ol>
-          <button onclick="fetchRooms()">Try Again</button>
-        </div>`;
-    }
-  }
-
-  function getFiltered() {
-    let rooms = [...allRooms];
-
-    if (activeTag) {
-      rooms = rooms.filter(r => {
-        const tags = (r.tags || []).join(' ').toLowerCase();
-        return tags.includes(activeTag);
+  <script>
+    (function(){
+      const $g = document.getElementById('g');
+      const $s1 = document.getElementById('s1');
+      const $s2 = document.getElementById('s2');
+      const $s4 = document.getElementById('s4');
+      const $hc = document.getElementById('hc');
+      const $s3 = document.getElementById('s3');
+      const $fi = document.getElementById('fi');
+      const WM = 'T2CSW';
+      let allRooms = [], currentGender = 'all', refreshSec = 90, timer;
+      const placeholderImg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 270'%3E%3Crect width='360' height='270' fill='%23070310'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23c000ff' font-size='16' font-family='monospace'%3ELIVE%3C/text%3E%3C/svg%3E";
+      const escapeHTML = str => String(str).replace(/[&<>]/g, function(m){
+        if(m==='&') return '&amp;';
+        if(m==='<') return '&lt;';
+        if(m==='>') return '&gt;';
+        return m;
       });
-    }
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      rooms = rooms.filter(r =>
-        (r.username || '').toLowerCase().includes(q) ||
-        (r.tags || []).some(t => t.toLowerCase().includes(q))
-      );
-    }
-
-    if (sortMode === 'viewers_desc') rooms.sort((a, b) => b.num_users - a.num_users);
-    else if (sortMode === 'viewers_asc') rooms.sort((a, b) => a.num_users - b.num_users);
-
-    return rooms;
-  }
-
-  function formatViewers(n) {
-    return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
-  }
-
-  function cardDelay(i) {
-    return Math.min(i * 30, 600);
-  }
-
-  function render() {
-    const rooms = getFiltered();
-    const app = document.getElementById('app');
-    const stats = document.getElementById('statsBar');
-
-    stats.innerHTML = `Showing <strong>${rooms.length}</strong> live rooms`;
-
-    if (rooms.length === 0) {
-      app.innerHTML = `<div class="grid"><div class="no-results">No rooms found. Try a different filter.</div></div>`;
-      return;
-    }
-
-    const cards = rooms.map((r, i) => {
-      const thumb = r.thumb || r.image_url_360x270 || '';
-      const tags = (r.tags || []).slice(0, 3);
-      const url = ROOM_BASE + encodeURIComponent(r.username) + '/';
-
-      return `
-        <a class="card" href="${url}" target="_blank" rel="noopener" style="animation-delay:${cardDelay(i)}ms">
-          <div class="thumb-wrap">
-            ${thumb ? `<img src="${thumb}" alt="${r.username}" loading="lazy">` : ''}
-            <div class="viewers-badge">${formatViewers(r.num_users)} watching</div>
-          </div>
-          <div class="card-body">
-            <div class="room-name">${r.username}</div>
-            <div class="room-tags">
-              ${tags.map(t => `<span class="room-tag">#${t}</span>`).join('')}
-            </div>
-          </div>
-        </a>`;
-    }).join('');
-
-    app.innerHTML = `<div class="grid">${cards}</div>`;
-  }
-
-  // Event listeners
-  document.getElementById('searchInput').addEventListener('input', e => {
-    searchQuery = e.target.value.trim();
-    render();
-  });
-
-  document.getElementById('sortSelect').addEventListener('change', e => {
-    sortMode = e.target.value;
-    render();
-  });
-
-  document.getElementById('tagFilters').addEventListener('click', e => {
-    const btn = e.target.closest('.tag-btn');
-    if (!btn) return;
-    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeTag = btn.dataset.tag;
-    render();
-  });
-
-  // Load + auto-refresh every 3 minutes
-  fetchRooms();
-  setInterval(fetchRooms, 3 * 60 * 1000);
-</script>
+      const formatNum = n => n >= 1000 ? (n/1000).toFixed(1) + 'k' : String(n);
+      const getRoomLink = u => 'https://chaturbate.com/' + u + '/?tour=Limj&campaign=' + WM + '&track=default';
+      
+      function renderCards(rooms){
+        if(!rooms.length){
+          $g.innerHTML = '<div class="no"><h3>No Rooms Found</h3><p>Try a different filter or search</p></div>';
+          return;
+        }
+        let html = '';
+        for(let i = 0; i < rooms.length; i++){
+          const r = rooms[i];
+          const link = getRoomLink(r.username);
+          const tags = (r.tags || []).slice(0,3).map(t => `<span class="ctg">${escapeHTML(t)}</span>`).join('');
+          const topBadge = i < 3 ? '<span class="b-top">⭐ #' + (i+1) + '</span>' : '';
+          const viewers = formatNum(r.num_users || 0);
+          const imgSrc = r.image_url_360x270 || r.image_url || '';
+          html += `<div class="c"><a href="${link}" target="_blank" rel="noopener"><div class="c-th"><img loading="lazy" decoding="async" src="${imgSrc}" alt="${escapeHTML(r.username)}" onerror="this.src='${placeholderImg}'"><span class="b-lv">LIVE</span>${topBadge}<span class="b-vc">👁 ${viewers}</span></div><div class="c-bd"><div class="c-nm">${escapeHTML(r.username)}</div><div class="c-tg">${tags}</div></div></a><a class="c-btn" href="${link}" target="_blank" rel="noopener">▶ Watch Free Now</a></div>`;
+        }
+        $g.innerHTML = html;
+      }
+      
+      function filterAndRender(){
+        const query = $fi.value.toLowerCase();
+        let filtered = allRooms.filter(r => {
+          if(currentGender !== 'all' && r.gender !== currentGender) return false;
+          if(query && !r.username.toLowerCase().includes(query) && !(r.tags || []).some(t => t.includes(query))) return false;
+          return true;
+        });
+        renderCards(filtered);
+      }
+      
+      function updateStats(rooms, totalViewers, topViewers){
+        $s1.textContent = rooms.length;
+        $s2.textContent = formatNum(totalViewers);
+        $s4.textContent = formatNum(topViewers);
+        $hc.textContent = rooms.length + ' rooms online';
+      }
+      
+      function fetchRooms(){
+        fetch('https://chaturbate.com/api/public/affiliates/onlinerooms/?wm=' + WM + '&client_ip=request_ip&format=json&limit=90&offset=0')
+          .then(res => res.json())
+          .then(data => {
+            const list = data.results || [];
+            list.sort((a,b) => (b.num_users || 0) - (a.num_users || 0));
+            allRooms = list;
+            const totalViewers = list.reduce((s,r) => s + (r.num_users || 0), 0);
+            const topViewers = list[0] ? list[0].num_users || 0 : 0;
+            updateStats(list, totalViewers, topViewers);
+            filterAndRender();
+            refreshSec = 90;
+            if(timer) clearInterval(timer);
+            timer = setInterval(() => {
+              if(refreshSec > 0){
+                refreshSec--;
+                $s3.textContent = refreshSec + 's';
+              } else {
+                fetchRooms();
+              }
+            }, 1000);
+          })
+          .catch(() => {
+            $g.innerHTML = '<div class="no"><h3>Connection Error</h3><p>Please refresh</p></div>';
+          });
+      }
+      
+      function initEvents(){
+        document.querySelectorAll('.fb').forEach(btn => {
+          btn.addEventListener('click', function(){
+            document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+            this.classList.add('on');
+            currentGender = this.getAttribute('data-filter');
+            filterAndRender();
+          });
+        });
+        $fi.addEventListener('input', () => filterAndRender());
+      }
+      
+      function showSkeleton(){
+        $g.innerHTML = Array(12).fill('<div class="sk"><div class="sk-i"></div><div class="sk-l"></div><div class="sk-l s"></div></div>').join('');
+      }
+      
+      document.getElementById('fy').textContent = new Date().getFullYear();
+      showSkeleton();
+      fetchRooms();
+      initEvents();
+    })();
+  </script>
 </body>
 </html>
