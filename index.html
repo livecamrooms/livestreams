@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiveStream Directory — Find Live Rooms Now</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --surface: #111114;
+    --card: #16161a;
+    --border: #222228;
+    --accent: #ff3c5f;
+    --accent2: #ff7a00;
+    --text: #f0f0f0;
+    --muted: #666676;
+    --live: #00e676;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -100px; }
+  .blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; left: -100px; }
+
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: rgba(10,10,12,0.7);
+    position: sticky;
+    top: 0;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--live);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 8px var(--live);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 64px 40px 40px;
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    line-height: 0.95;
+    letter-spacing: 0.03em;
+    background: linear-gradient(160deg, #fff 40%, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    margin: 18px auto 0;
+    max-width: 480px;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .controls {
+    position: relative;
+    z-index: 1;
+    padding: 0 40px 32px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px 10px 40px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap::before {
+    content: '⌕';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+
+  .sort-select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .sort-select:focus { border-color: var(--accent); }
+
+  .tag-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tag-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .tag-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tag-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .stats-bar {
+    position: relative;
+    z-index: 1;
+    padding: 0 40px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .stats-bar strong { color: var(--text); }
+
+  .grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    padding: 0 40px 80px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    animation: fadeIn 0.4s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,60,95,0.5);
+    box-shadow: 0 16px 48px rgba(255,60,95,0.12);
+  }
+
+  .thumb-wrap {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: #1a1a20;
+  }
+
+  .thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .card:hover .thumb-wrap img { transform: scale(1.06); }
+
+  .viewers-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #fff;
+  }
+
+  .viewers-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 6px var(--live);
+  }
+
+  .card-body {
+    padding: 14px 16px 16px;
+  }
+
+  .room-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 6px;
+  }
+
+  .room-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .room-tag {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .loading {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 100px 40px;
+    color: var(--muted);
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--muted);
+  }
+
+  .error-msg button {
+    margin-top: 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .no-results {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--muted);
+    grid-column: 1/-1;
+  }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 30px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 18px 20px; }
+    .hero { padding: 40px 20px 28px; }
+    .controls { padding: 0 20px 24px; }
+    .grid { padding: 0 20px 60px; gap: 14px; }
+    .stats-bar { padding: 0 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<header>
+  <div class="logo">StreamNow</div>
+  <div class="live-badge">
+    <span class="live-dot"></span>
+    Rooms Live Now
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Find Who's<br><span>Live Right Now</span></h1>
+  <p>Browse thousands of live streams. Updated in real time.</p>
+</section>
+
+<div class="controls">
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Search rooms..." />
+  </div>
+  <select class="sort-select" id="sortSelect">
+    <option value="viewers_desc">Most Viewers</option>
+    <option value="viewers_asc">Fewest Viewers</option>
+  </select>
+  <div class="tag-filters" id="tagFilters">
+    <button class="tag-btn active" data-tag="">All</button>
+    <button class="tag-btn" data-tag="female">Female</button>
+    <button class="tag-btn" data-tag="male">Male</button>
+    <button class="tag-btn" data-tag="couple">Couple</button>
+    <button class="tag-btn" data-tag="trans">Trans</button>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div id="app"></div>
+
+<footer>
+  All streams are hosted externally. Content is 18+ only.<br>
+  <span style="font-size:0.7rem;opacity:0.6;">Tip: Open this file with a local server (python -m http.server) or deploy to Netlify/Vercel for best results.</span>
+</footer>
+
+<script>
+  const API_URL = 'https://chaturbate.com/api/public/affiliates/onlinerooms/?wm=T2CSW&format=json&limit=90';
+  const ROOM_BASE = 'https://chaturbate.com/';
+
+  let allRooms = [];
+  let activeTag = '';
+  let sortMode = 'viewers_desc';
+  let searchQuery = '';
+
+  async function fetchRooms() {
+    const app = document.getElementById('app');
+    app.innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading live rooms…</p></div>`;
+
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allRooms = data.results || [];
+      console.log(`✅ Loaded ${allRooms.length} rooms`);
+      render();
+    } catch (e) {
+      console.error(e);
+      app.innerHTML = `
+        <div class="error-msg">
+          <p>Couldn't load rooms.</p>
+          <p style="margin-top:12px;font-size:0.9rem;opacity:0.8;">
+            This is usually a CORS/browser security issue.<br>
+            <strong>Solution:</strong><br>
+            1. Host this file on a web server (don't double-click the HTML)<br>
+            2. Run locally: <code style="background:#222;padding:2px 6px;border-radius:4px;">python -m http.server</code><br>
+            3. For production you may need a simple backend proxy.
+          </p>
+          <button onclick="fetchRooms()">Try Again</button>
+        </div>`;
+    }
+  }
+
+  function getFiltered() {
+    let rooms = [...allRooms];
+
+    // Tag filter
+    if (activeTag) {
+      rooms = rooms.filter(r => {
+        const tags = (r.tags || []).join(' ').toLowerCase();
+        return tags.includes(activeTag);
+      });
+    }
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      rooms = rooms.filter(r =>
+        (r.username || '').toLowerCase().includes(q) ||
+        (r.tags || []).some(t => t.toLowerCase().includes(q))
+      );
+    }
+
+    // Sorting
+    if (sortMode === 'viewers_desc') {
+      rooms.sort((a, b) => b.num_users - a.num_users);
+    } else if (sortMode === 'viewers_asc') {
+      rooms.sort((a, b) => a.num_users - b.num_users);
+    }
+
+    return rooms;
+  }
+
+  function formatViewers(n) {
+    return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n;
+  }
+
+  function cardDelay(i) {
+    return Math.min(i * 30, 600);
+  }
+
+  function render() {
+    const rooms = getFiltered();
+    const app = document.getElementById('app');
+    const stats = document.getElementById('statsBar');
+
+    stats.innerHTML = `Showing <strong>${rooms.length}</strong> live rooms`;
+
+    if (rooms.length === 0) {
+      app.innerHTML = `<div class="grid"><div class="no-results">No rooms found. Try a different filter.</div></div>`;
+      return;
+    }
+
+    const cards = rooms.map((r, i) => {
+      const thumb = r.thumb || r.image_url_360x270 || '';
+      const tags = (r.tags || []).slice(0, 3);
+      const url = ROOM_BASE + encodeURIComponent(r.username) + '/';
+
+      return `
+        <a class="card" href="${url}" target="_blank" rel="noopener" style="animation-delay:${cardDelay(i)}ms">
+          <div class="thumb-wrap">
+            ${thumb ? `<img src="${thumb}" alt="${r.username}" loading="lazy">` : ''}
+            <div class="viewers-badge">${formatViewers(r.num_users)} watching</div>
+          </div>
+          <div class="card-body">
+            <div class="room-name">${r.username}</div>
+            <div class="room-tags">
+              ${tags.map(t => `<span class="room-tag">#${t}</span>`).join('')}
+            </div>
+          </div>
+        </a>`;
+    }).join('');
+
+    app.innerHTML = `<div class="grid">${cards}</div>`;
+  }
+
+  // Event listeners
+  document.getElementById('searchInput').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    render();
+  });
+
+  document.getElementById('sortSelect').addEventListener('change', e => {
+    sortMode = e.target.value;
+    render();
+  });
+
+  document.getElementById('tagFilters').addEventListener('click', e => {
+    const btn = e.target.closest('.tag-btn');
+    if (!btn) return;
+    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    render();
+  });
+
+  // Initial load + auto-refresh every 3 minutes
+  fetchRooms();
+  setInterval(fetchRooms, 3 * 60 * 1000);
+</script>
+</body>
+</html>
