@@ -29,7 +29,6 @@
     overflow-x: hidden;
   }
 
-  /* Noise overlay */
   body::before {
     content: '';
     position: fixed;
@@ -440,11 +439,13 @@
 
 <footer>
   All streams are hosted externally. Content is 18+ only.<br>
-  <span style="font-size:0.7rem;opacity:0.6;">Tip: Open this file with a local server (python -m http.server) or deploy to Netlify/Vercel for best results.</span>
+  <span style="font-size:0.7rem;opacity:0.6;">Using temporary CORS proxy • For best speed run with python -m http.server</span>
 </footer>
 
 <script>
-  const API_URL = 'https://chaturbate.com/api/public/affiliates/onlinerooms/?wm=T2CSW&format=json&limit=90';
+  // CORS proxy so it works even when double-clicking the file
+  const PROXY = 'https://corsproxy.io/?';
+  const API_URL = PROXY + encodeURIComponent('https://chaturbate.com/api/public/affiliates/onlinerooms/?wm=T2CSW&format=json&limit=90');
   const ROOM_BASE = 'https://chaturbate.com/';
 
   let allRooms = [];
@@ -461,20 +462,18 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       allRooms = data.results || [];
-      console.log(`✅ Loaded ${allRooms.length} rooms`);
+      console.log(`✅ Loaded ${allRooms.length} live rooms`);
       render();
     } catch (e) {
       console.error(e);
       app.innerHTML = `
         <div class="error-msg">
-          <p>Couldn't load rooms.</p>
-          <p style="margin-top:12px;font-size:0.9rem;opacity:0.8;">
-            This is usually a CORS/browser security issue.<br>
-            <strong>Solution:</strong><br>
-            1. Host this file on a web server (don't double-click the HTML)<br>
-            2. Run locally: <code style="background:#222;padding:2px 6px;border-radius:4px;">python -m http.server</code><br>
-            3. For production you may need a simple backend proxy.
-          </p>
+          <p>Still couldn't load rooms.</p>
+          <p style="margin-top:12px;font-size:0.9rem;">Try these steps:</p>
+          <ol style="text-align:left;max-width:420px;margin:20px auto;font-size:0.9rem;">
+            <li>Run locally with: <code style="background:#222;padding:2px 6px;border-radius:4px;">python -m http.server</code></li>
+            <li>Or deploy to Netlify / Vercel (free)</li>
+          </ol>
           <button onclick="fetchRooms()">Try Again</button>
         </div>`;
     }
@@ -483,7 +482,6 @@
   function getFiltered() {
     let rooms = [...allRooms];
 
-    // Tag filter
     if (activeTag) {
       rooms = rooms.filter(r => {
         const tags = (r.tags || []).join(' ').toLowerCase();
@@ -491,7 +489,6 @@
       });
     }
 
-    // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       rooms = rooms.filter(r =>
@@ -500,12 +497,8 @@
       );
     }
 
-    // Sorting
-    if (sortMode === 'viewers_desc') {
-      rooms.sort((a, b) => b.num_users - a.num_users);
-    } else if (sortMode === 'viewers_asc') {
-      rooms.sort((a, b) => a.num_users - b.num_users);
-    }
+    if (sortMode === 'viewers_desc') rooms.sort((a, b) => b.num_users - a.num_users);
+    else if (sortMode === 'viewers_asc') rooms.sort((a, b) => a.num_users - b.num_users);
 
     return rooms;
   }
@@ -573,7 +566,7 @@
     render();
   });
 
-  // Initial load + auto-refresh every 3 minutes
+  // Load + auto-refresh every 3 minutes
   fetchRooms();
   setInterval(fetchRooms, 3 * 60 * 1000);
 </script>
